@@ -1,0 +1,38 @@
+{
+  "name": "action-validator",
+  "description": "Run promises in batches waiting for data from previous promises.",
+  "author": "Hasnat Ullah <hasnat.ullah@gmail.com> (https://hasn.at)",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hasnat/action-validator.git"
+  },
+  "keywords": [
+    "validation",
+    "validator",
+    "data",
+    "validate"
+  ],
+  "dependencies": {
+    "is-equal": "^1.5.5",
+    "nested-property": "0.0.7",
+    "pad": "^1.1.0",
+    "promises-runner": "0.0.5",
+    "typeof": "^1.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
+    "chai": "^4.0.2",
+    "mocha": "^3.4.2",
+    "sinon": "^2.3.5",
+    "validator": "^7.2.0"
+  },
+  "scripts": {
+    "build": "babel ./index.js --presets babel-preset-es2015 --out-dir ./dist",
+    "prepublish": "npm run build",
+    "test": "mocha"
+  },
+  "license": "MIT"
+}
