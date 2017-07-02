@@ -69,12 +69,12 @@ const logInvalidValidation = (validationObject, key) => {
     }
 }
 
-const logSkippingValidation = (validationObject, key) => {
+const logSkippingValidation = (validationObject, key, lastAll) => {
     if (!VERBOSE_LOGGER) {
         return;
     }
     const logTag = pad('validation-skipped', PAD_LEN);
-    VERBOSE_LOGGER(`[${logTag}] -- \`${key}\` Skipping as previous one was last or lastAll. // ${validationObject.message}`);
+    VERBOSE_LOGGER(`[${logTag}] -- \`${key}\` Skipping as previous one was last or lastAll(${lastAll}). // ${validationObject.message}`);
 }
 
 const logRunningValidation = (validationObject, key, data) => {
@@ -92,7 +92,7 @@ let VERBOSE_LOGGER = false;
 
 const validateAndReturnResult = (validationObject, _key, data) => {
     if (skipAllRest || _key === skipAllForKey) {
-        logSkippingValidation(validationObject, _key)
+        logSkippingValidation(validationObject, _key, skipAllRest)
         return Promise.resolve({})
     }
     let key = validationObject.key || _key;
@@ -163,6 +163,8 @@ const prepareErrorString = (key, validationResult, validationObject, data) => {
     return errorMessage;
 }
 module.exports = (validations, data, showLog = false) => {
+    skipAllRest = false;
+    skipAllForKey = false;
     VERBOSE_LOGGER = showLog;
 
     const objectsArrayWithPromises = [];
