@@ -2,7 +2,7 @@
   "name": "action-validator",
   "description": "Run promises in batches waiting for data from previous promises.",
   "author": "Hasnat Ullah <hasnat.ullah@gmail.com> (https://hasn.at)",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./dist/index.js",
   "repository": {
     "type": "git",

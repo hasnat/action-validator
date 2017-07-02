@@ -97,7 +97,7 @@ const validateAndReturnResult = (validationObject, _key, data) => {
     }
     let key = validationObject.key || _key;
     let inputArgs = [data[key] || '']
-    if (validationObject.s) {       //request data siblings as extra argument
+    if (validationObject.data) {       //request data siblings as extra argument
         inputArgs.push(data);
     }
     logRunningValidation(validationObject, key, inputArgs);
