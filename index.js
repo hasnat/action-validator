@@ -53,10 +53,10 @@ const logValidationResult = (validationObject, isValid) => {
     if (!VERBOSE_LOGGER) {
         return;
     }
-    const validationName = np(validationObject, 'v.name') || 'anonymous';
+    const validationName = np(validationObject, 'validation.name') || 'anonymous';
     const validationResultASCII = isValid ? '✗' : '✓';
     const logTag = pad('validation-result', PAD_LEN);
-    VERBOSE_LOGGER(`[${logTag}] -- [${validationResultASCII}] ${validationName}(...) = ${isValid}  // ${validationObject.m}`);
+    VERBOSE_LOGGER(`[${logTag}] -- [${validationResultASCII}] ${validationName}(...) = ${isValid}  // ${validationObject.message}`);
 }
 
 const logInvalidValidation = (validationObject, key) => {
@@ -64,8 +64,8 @@ const logInvalidValidation = (validationObject, key) => {
         return;
     }
     const logTag = pad('validation-invalid', PAD_LEN);
-    if (!validationObject.v) { // possibly a server side validation check
-        VERBOSE_LOGGER(`[${logTag}] -- \`${key}\` Invalid or server side validator. // ${validationObject.m}`);
+    if (!validationObject.validation) { // possibly a server side validation check
+        VERBOSE_LOGGER(`[${logTag}] -- \`${key}\` Invalid or server side validator. // ${validationObject.message}`);
     }
 }
 
@@ -74,16 +74,16 @@ const logSkippingValidation = (validationObject, key) => {
         return;
     }
     const logTag = pad('validation-skipped', PAD_LEN);
-    VERBOSE_LOGGER(`[${logTag}] -- \`${key}\` Skipping as previous one was last or lastAll. // ${validationObject.m}`);
+    VERBOSE_LOGGER(`[${logTag}] -- \`${key}\` Skipping as previous one was last or lastAll. // ${validationObject.message}`);
 }
 
 const logRunningValidation = (validationObject, key, data) => {
     if (!VERBOSE_LOGGER) {
         return;
     }
-    const validationName = np(validationObject, 'v.name') || 'anonymous';
+    const validationName = np(validationObject, 'validation.name') || 'anonymous';
     const logTag = pad('validation-start', PAD_LEN);
-    VERBOSE_LOGGER(`[${logTag}] -- [ ] ${validationName}(...${data}) // ${validationObject.m}`);
+    VERBOSE_LOGGER(`[${logTag}] -- [ ] ${validationName}(...${data}) // ${validationObject.message}`);
 }
 
 let skipAllRest = false;
