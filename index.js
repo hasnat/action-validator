@@ -149,10 +149,14 @@ const prepareErrorString = (key, validationResult, validationObject, data) => {
                 title: setDataInErrorString(validationObject.redirection[i].title, data),
             })
         }
-        errorMessage['_redirection'] = redirection;
+        errorMessage[errorKey] = {
+            _message: validationMessage,
+            _redirection: redirection
+        };
+    } else {
+        errorMessage[errorKey] = validationMessage;
     }
 
-    errorMessage[errorKey] = validationMessage;
     if (validationObject.lastAll) {
         throw new EndActionValidations(errorMessage);
     }

@@ -51,13 +51,16 @@ describe('actionValidator', function () {
             .catch((e) => {
                 expect(e).to.deep.equal(
                     {
-                        _error: 'Given value FailForTest will cause fail',
-                        _redirection: [
-                            {
-                                'href': '/value/in/link/FailForTest',
-                                'title': 'Also in title "FailForTest"'
-                            }
-                        ]
+                        _error: {
+                            _message: 'Given value FailForTest will cause fail',
+                            _redirection: [
+                                {
+                                    'href': '/value/in/link/FailForTest',
+                                    'title': 'Also in title "FailForTest"'
+                                }
+                            ]
+                        },
+
                     }
                 );
                 done();

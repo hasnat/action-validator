@@ -1,8 +1,8 @@
 {
   "name": "action-validator",
-  "description": "Run promises in batches waiting for data from previous promises.",
+  "description": "Run validation for actions with simple configs.",
   "author": "Hasnat Ullah <hasnat.ullah@gmail.com> (https://hasn.at)",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "./dist/index.js",
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
     "is-equal": "^1.5.5",
     "nested-property": "0.0.7",
     "pad": "^1.1.0",
-    "promises-runner": "0.0.6",
+    "promises-runner": "0.0.7",
     "typeof": "^1.0.0"
   },
   "devDependencies": {
