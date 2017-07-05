@@ -49,158 +49,167 @@ const prepareValidationObject = (_validationObject) => {
     return validationObject;
 }
 
-const logValidationResult = (validationObject, isValid) => {
-    if (!VERBOSE_LOGGER) {
-        return;
-    }
-    const validationName = np(validationObject, 'validation.name') || 'anonymous';
-    const validationResultASCII = isValid ? '✗' : '✓';
-    const logTag = pad('validation-result', PAD_LEN);
-    VERBOSE_LOGGER(`[${logTag}] -- [${validationResultASCII}] ${validationName}(...) = ${isValid}  // ${validationObject.message}`);
-}
-
-const logInvalidValidation = (validationObject, key) => {
-    if (!VERBOSE_LOGGER) {
-        return;
-    }
-    const logTag = pad('validation-invalid', PAD_LEN);
-    if (!validationObject.validation) { // possibly a server side validation check
-        VERBOSE_LOGGER(`[${logTag}] -- \`${key}\` Invalid or server side validator. // ${validationObject.message}`);
-    }
-}
-
-const logSkippingValidation = (validationObject, key, lastAll) => {
-    if (!VERBOSE_LOGGER) {
-        return;
-    }
-    const logTag = pad('validation-skipped', PAD_LEN);
-    VERBOSE_LOGGER(`[${logTag}] -- \`${key}\` Skipping as previous one was last or lastAll(${lastAll}). // ${validationObject.message}`);
-}
-
-const logRunningValidation = (validationObject, key, data) => {
-    if (!VERBOSE_LOGGER) {
-        return;
-    }
-    const validationName = np(validationObject, 'validation.name') || 'anonymous';
-    const logTag = pad('validation-start', PAD_LEN);
-    VERBOSE_LOGGER(`[${logTag}] -- [ ] ${validationName}(...${data}) // ${validationObject.message}`);
-}
-
-let skipAllRest = false;
-let skipAllForKey = false;
-let VERBOSE_LOGGER = false;
-
-const validateAndReturnResult = (validationObject, _key, data) => {
-    if (skipAllRest || _key === skipAllForKey) {
-        logSkippingValidation(validationObject, _key, skipAllRest)
-        return Promise.resolve({})
-    }
-    let key = validationObject.key || _key;
-    let inputArgs = [data[key] || '']
-    if (validationObject.data) {       //request data siblings as extra argument
-        inputArgs.push(data);
-    }
-    logRunningValidation(validationObject, key, inputArgs);
-    return ensurePromise(validationObject.validation(...inputArgs))
-        .then(validationResult => {
-            let anyErrorMessage = false;
-            try {
-                anyErrorMessage = prepareErrorString(key, validationResult, validationObject, data);
-            } catch (e) {
-                const errorType = typeOf(e);
-                if (
-                    errorType !== 'BreakCurrentFieldTestsException'.toLowerCase()
-                    && errorType !== 'EndActionValidations'.toLowerCase()
-                ) {
-                    throw e;
-                } else if (errorType === 'EndActionValidations'.toLowerCase()) {
-                    skipAllRest = true;
-                } else if (errorType === 'BreakCurrentFieldTestsException'.toLowerCase()) {
-                    skipAllForKey = e.key;
-                }
-
-                anyErrorMessage = e.errorMessage;
-            }
-            return Promise.resolve(anyErrorMessage || {});
-        });
-}
-
-const prepareErrorString = (key, validationResult, validationObject, data) => {
-    const expectedResult = validationObject.expect === undefined ? false : validationObject.expect;
-    const isValid = isEqual(validationResult, expectedResult);
-    logValidationResult(validationObject, validationResult);
-    if (isValid) {
-        return;
+module.exports = class ActionValidator {
+    constructor(validations, data, showLog = false) {
+        this.validations = validations;
+        this.data = data;
+        this.showLog = showLog;
+        this.skipAllRest = false;
+        this.skipAllForKey = false;
     }
 
-    let errorKey = key;
-    if (validationObject.causeGenericError) {
-        errorKey = '_error';
-    }
-    let validationMessage = validationObject.message;
-    const errorMessage = {};
-    if (validationObject.redirection) {
 
-        const redirection = [];
-        for (let i = 0; i < validationObject.redirection.length; i++) {
-            validationMessage = setDataInErrorString(validationMessage, data)
-            redirection.push({
-                href: setDataInErrorString(validationObject.redirection[i].href, data),
-                title: setDataInErrorString(validationObject.redirection[i].title, data),
-            })
+    logValidationResult(validationObject, isValid)  {
+        const {showLog} = this;
+        if (!showLog) {
+            return;
         }
-        errorMessage[errorKey] = {
-            _message: validationMessage,
-            _redirection: redirection
-        };
-    } else {
-        errorMessage[errorKey] = validationMessage;
+        const validationName = np(validationObject, 'validation.name') || 'anonymous';
+        const validationResultASCII = isValid ? '✗' : '✓';
+        const logTag = pad('validation-result', PAD_LEN);
+        showLog(`[${logTag}] -- [${validationResultASCII}] ${validationName}(...) = ${isValid}  // ${validationObject.message}`);
     }
 
-    if (validationObject.lastAll) {
-        throw new EndActionValidations(errorMessage);
+    logInvalidValidation(validationObject, key)  {
+        const {showLog} = this;
+        if (!showLog) {
+            return;
+        }
+        const logTag = pad('validation-invalid', PAD_LEN);
+        if (!validationObject.validation) { // possibly a server side validation check
+            showLog(`[${logTag}] -- \`${key}\` Invalid or server side validator. // ${validationObject.message}`);
+        }
     }
 
-    if (validationObject.last) {
-        throw new BreakCurrentFieldTestsException(errorMessage, key);
+    logSkippingValidation(validationObject, key, lastAll)  {
+        const {showLog} = this;
+        if (!showLog) {
+            return;
+        }
+        const logTag = pad('validation-skipped', PAD_LEN);
+        showLog(`[${logTag}] -- \`${key}\` Skipping as previous one was last or lastAll(${lastAll}). // ${validationObject.message}`);
     }
-    return errorMessage;
-}
-module.exports = (validations, data, showLog = false) => {
-    skipAllRest = false;
-    skipAllForKey = false;
-    VERBOSE_LOGGER = showLog;
 
-    const objectsArrayWithPromises = [];
-    if (validations) {
-        Object.keys(validations).forEach((key) => {
-            ensureArray(validations[key])
-                .forEach((_validationObject) => {
-                    const validationObject = prepareValidationObject(_validationObject);
-                    logInvalidValidation(validationObject, key);
-                    if (validationObject.validation) {
-                        objectsArrayWithPromises.push({
-                            promise: (data) => validateAndReturnResult(validationObject, key, data),
-                            wait: validationObject.wait
-                        });
+    logRunningValidation(validationObject, key, data) {
+        const {showLog} = this;
+        if (!showLog) {
+            return;
+        }
+        const validationName = np(validationObject, 'validation.name') || 'anonymous';
+        const logTag = pad('validation-start', PAD_LEN);
+        showLog(`[${logTag}] -- [ ] ${validationName}(...${data}) // ${validationObject.message}`);
+    }
+
+    validateAndReturnResult(validationObject, _key) {
+        const {skipAllRest, skipAllForKey, data} = this;
+        if (skipAllRest || _key === skipAllForKey) {
+            this.logSkippingValidation(validationObject, _key, skipAllRest)
+            return Promise.resolve({})
+        }
+        let key = validationObject.key || _key;
+        let inputArgs = [data[key] || '']
+        if (validationObject.data) {       //request data siblings as extra argument
+            inputArgs.push(data);
+        }
+        this.logRunningValidation(validationObject, key, inputArgs);
+        return ensurePromise(validationObject.validation(...inputArgs))
+            .then(validationResult => {
+                let anyErrorMessage = false;
+                try {
+                    anyErrorMessage = this.prepareErrorString(key, validationResult, validationObject, data);
+                } catch (e) {
+                    const errorType = typeOf(e);
+                    if (
+                        errorType !== 'BreakCurrentFieldTestsException'.toLowerCase()
+                        && errorType !== 'EndActionValidations'.toLowerCase()
+                    ) {
+                        throw e;
+                    } else if (errorType === 'EndActionValidations'.toLowerCase()) {
+                        this.skipAllRest = true;
+                    } else if (errorType === 'BreakCurrentFieldTestsException'.toLowerCase()) {
+                        this.skipAllForKey = e.key;
                     }
-                })
-        });
-    } else {
-        return Promise.reject({_error: 'No validations setup, cannot continue.'})
+
+                    anyErrorMessage = e.errorMessage;
+                }
+                return Promise.resolve(anyErrorMessage || {});
+            });
     }
 
+    prepareErrorString(key, validationResult, validationObject) {
+        const {data} = this;
+        const expectedResult = validationObject.expect === undefined ? false : validationObject.expect;
+        const isValid = isEqual(validationResult, expectedResult);
+        this.logValidationResult(validationObject, validationResult);
+        if (isValid) {
+            return;
+        }
 
-    return new PromisesRunner({
-        objectsArrayWithPromises,
-        inputData: data,
-        // outputDataKey: 'errors',
-        // mergePromiseOutputToNextPromiseInput: true,
-        mergeSameKeyByConvertingToArray: true
-    })
-        .start()
-        .then(v => isEqual(v, {}) ? Promise.resolve() : Promise.reject(v))
+        let errorKey = key;
+        if (validationObject.causeGenericError) {
+            errorKey = '_error';
+        }
+        let validationMessage = validationObject.message;
+        const errorMessage = {};
+        if (validationObject.redirection) {
 
+            const redirection = [];
+            for (let i = 0; i < validationObject.redirection.length; i++) {
+                validationMessage = setDataInErrorString(validationMessage, data);
+                redirection.push({
+                    href: setDataInErrorString(validationObject.redirection[i].href, data),
+                    title: setDataInErrorString(validationObject.redirection[i].title, data),
+                })
+            }
+            errorMessage[errorKey] = {
+                _message: validationMessage,
+                _redirection: redirection
+            };
+        } else {
+            errorMessage[errorKey] = validationMessage;
+        }
+
+        if (validationObject.lastAll) {
+            throw new EndActionValidations(errorMessage);
+        }
+
+        if (validationObject.last) {
+            throw new BreakCurrentFieldTestsException(errorMessage, key);
+        }
+        return errorMessage;
+    }
+    start() {
+        const {validations, data} = this;
+        const objectsArrayWithPromises = [];
+        if (validations) {
+            Object.keys(validations).forEach((key) => {
+                ensureArray(validations[key])
+                    .forEach((_validationObject) => {
+                        const validationObject = prepareValidationObject(_validationObject);
+                        this.logInvalidValidation(validationObject, key);
+                        if (validationObject.validation) {
+                            objectsArrayWithPromises.push({
+                                promise: (data) => this.validateAndReturnResult(validationObject, key),
+                                wait: validationObject.wait
+                            });
+                        }
+                    })
+            });
+        } else {
+            return Promise.reject({_error: 'No validations setup, cannot continue.'})
+        }
+
+
+        return new PromisesRunner({
+            objectsArrayWithPromises,
+            inputData: data,
+            // outputDataKey: 'errors',
+            // mergePromiseOutputToNextPromiseInput: true,
+            mergeSameKeyByConvertingToArray: true
+        })
+            .start()
+            .then(v => isEqual(v, {}) ? Promise.resolve() : Promise.reject(v))
+
+    }
 
 }
-

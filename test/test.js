@@ -1,12 +1,13 @@
 const {expect, assert} = require('chai');
 const sinon = require('sinon');
-const actionValidator = require('../index.js');
+const ActionValidator = require('../index.js');
 const loginActions = require('./validationConfigs/loginActions')
 
 describe('actionValidator', function () {
 
     it('gets validation errors', function (done) {
-        actionValidator(loginActions.login, {email: ''})
+        new ActionValidator(loginActions.login, {email: ''})
+            .start()
             .then(done)
             .catch((e) => {
                 expect(e).to.deep.equal(
@@ -21,7 +22,8 @@ describe('actionValidator', function () {
     });
 
     it('validation errors are grouped', function (done) {
-        actionValidator(loginActions.login, {email: 'asd@asd.cc', password: '@'})
+        new ActionValidator(loginActions.login, {email: 'asd@asd.cc', password: '@'})
+            .start()
             .then(done)
             .catch((e) => {
                 expect(e).to.deep.equal(
@@ -38,15 +40,31 @@ describe('actionValidator', function () {
             }).catch(done)
     });
 
+    it('validation errors are skipped', function (done) {
+        new ActionValidator(loginActions.login, {thisShouldBeEmpty: 'notEmpty'})
+            .start()
+            .then(done)
+            .catch((e) => {
+                expect(e).to.deep.equal(
+                    {
+                        thisShouldBeEmpty: 'Failure on this causes rest to be skipped',
+                    }
+                );
+                done();
+            }).catch(done)
+    });
+
     it('calls then on no validation', function (done) {
-        actionValidator(loginActions.login, {email: 'asd@asd.cc', password: 'aA1', reCaptcha: 'XXX'})
+        new ActionValidator(loginActions.login, {email: 'asd@asd.cc', password: 'aA1', reCaptcha: 'XXX'})
+            .start()
             .then(done)
             .catch(done)
     });
 
 
     it('gets redirection links', function (done) {
-        actionValidator(loginActions.login, {email: 'asd@asd.cc', password: 'FailForTest', reCaptcha: 'XXX'})
+        new ActionValidator(loginActions.login, {email: 'asd@asd.cc', password: 'FailForTest', reCaptcha: 'XXX'})
+            .start()
             .then(done)
             .catch((e) => {
                 expect(e).to.deep.equal(
@@ -55,8 +73,8 @@ describe('actionValidator', function () {
                             _message: 'Given value FailForTest will cause fail',
                             _redirection: [
                                 {
-                                    'href': '/value/in/link/FailForTest',
-                                    'title': 'Also in title "FailForTest"'
+                                    href: '/value/in/link/FailForTest',
+                                    title: 'Also in title "FailForTest"'
                                 }
                             ]
                         },

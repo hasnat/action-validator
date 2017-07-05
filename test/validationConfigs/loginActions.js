@@ -14,6 +14,9 @@ module.exports = {
         // ]
     },
     login: {
+        thisShouldBeEmpty: [
+            {v: v.isEmpty, m: 'Failure on this causes rest to be skipped', lastAll: true, ex: true, w: true},
+        ],
         email: [
             {v: v.isEmpty, m: 'Email cannot be empty', last: true},
             {v: v.isEmail, m: 'Email is not valid', ex: true, w: true, last: true}
