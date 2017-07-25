@@ -106,17 +106,18 @@ module.exports = class ActionValidator {
             this.logSkippingValidation(validationObject, _key, skipAllRest)
             return Promise.resolve({})
         }
-        let key = validationObject.key || _key;
-        let inputArgs = [data[key] || '']
+        const dataProvided = data[validationObject.key || _key];
+
+        let inputArgs = [typeOf(dataProvided) !== 'undefined' ? dataProvided : '']
         if (validationObject.data) {       //request data siblings as extra argument
             inputArgs.push(data);
         }
-        this.logRunningValidation(validationObject, key, inputArgs);
+        this.logRunningValidation(validationObject, _key, inputArgs);
         return ensurePromise(validationObject.validation(...inputArgs))
             .then(validationResult => {
                 let anyErrorMessage = false;
                 try {
-                    anyErrorMessage = this.prepareErrorString(key, validationResult, validationObject, data);
+                    anyErrorMessage = this.prepareErrorString(_key, validationResult, validationObject, data);
                 } catch (e) {
                     const errorType = typeOf(e);
                     if (
