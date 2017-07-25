@@ -2,7 +2,7 @@
   "name": "action-validator",
   "description": "Run validation for actions with simple configs.",
   "author": "Hasnat Ullah <hasnat.ullah@gmail.com> (https://hasn.at)",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "./dist/index.js",
   "repository": {
     "type": "git",
