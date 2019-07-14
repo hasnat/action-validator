@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/hasnat/action-validator.svg)](https://travis-ci.org/hasnat/action-validator)
 
-[![NPM](https://nodei.co/npm/action-validator.png)](https://nodei.co/npm/action-validator/)
+[![NPM](https://nodei.co/npm/action-validator.png)](https://nodei.co/npm/action-validator/) [![Greenkeeper badge](https://badges.greenkeeper.io/hasnat/action-validator.svg)](https://greenkeeper.io/)
 
 Run validation for actions with simple configs
 
